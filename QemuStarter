@@ -1,0 +1,108 @@
+#!/bin/bash
+
+
+declare -a entryArray
+i=0
+for entry in `ls`; do
+    if [[ $entry == *".qcow"* ]]; then
+        entryArray+=($entry)
+        i=$(($i+1))
+    fi
+done
+
+if [[ $i -eq 0 ]] ; then
+    echo 'NO QCOW DISK IN THIS DIRECTORY!'
+    exit
+fi
+if [[ $i > 1 ]] ; then
+    i=0
+    for e in "${entryArray[@]}" 
+        do
+        echo "$i = $e"
+        i=$(($i+1))
+    done
+    echo "Which one:"
+    read VM
+    VMFile=${entryArray[$VM]}
+else
+    VMFile=$entryArray
+fi
+
+# Sound
+echo "Wanna Sound? (Y/n)"
+read yeano
+if [[ $yeano == 'n' || $yeano == 'N' ]] ; then
+    yeano=''
+else
+    sound='-device intel-hda -device hda-duplex'
+    yeano=''
+fi
+
+# KVM
+echo "Use KVM? (Y/n)"
+read yeano
+if [[ $yeano == 'n' || $yeano == 'N' ]] ; then
+    yeano=''
+else
+    kvm='-enable-kvm'
+    yeano=''
+fi
+
+# boot menu
+echo "Wanna bootmenu? (Y/n)"
+read yeano
+if [[ $yeano == 'n' || $yeano == 'N' ]] ; then
+    yeano=''
+else
+    menu='-boot menu=on'
+    yeano=''
+fi
+
+# boot menu
+echo "Wanna fullscreen? (y/N)"
+read yeano
+if [[ $yeano == 'Y' || $yeano == 'y' ]] ; then
+    fullscreen='--full-screen'
+    yeano=''
+else
+    yeano=''
+fi
+
+# Disk [HDD]
+echo "Wanna add ur HDD? (y/N)"
+echo 'info: open the script and add the id of ur disk, otherwise it wont add a disk.'
+read yeano
+if [[ $yeano == 'Y' || $yeano == 'y' ]] ; then
+    sudo='sudo '
+    disk='-drive file=/dev/disk/by-id/ata-ST2000DM008-2UB102_ZK30C42L'
+    yeano=''
+else
+    yeano=''
+fi
+
+cpu='-cpu host -smp 8'
+echo 'How many threads of ur cpu? (default: 8)'
+read threads
+if [[ $threads == '' ]] ; then
+    cpu='-cpu host -smp 8'
+else
+    cpu="-cpu host -smp $threads"
+fi
+
+# memory
+memory='-m 8G '
+echo 'How many GB of memory would u like to give it? (default: 8)'
+read gigs
+if [[ $gigs == '' ]] ; then
+    memory='-m 8G'
+else
+    G='G'
+    memory="-m $gigs$G"
+fi
+
+
+qemu='qemu-system-x86_64'
+echo 'Run the Following Command:'
+echo "$sudo$qemu $sound $kvm $menu -drive file=$VMFile $disk $memory $cpu -vga virtio  $fullscreen"
+#    
+#sudo qemu-system-x86_64 -device intel-hda -device hda-duplex -enable-kvm -boot menu=on -drive file=Kali-Bughunting.qcow2 -drive file=/dev/disk/by-id/ata-ST2000DM008-2UB102_ZK30C42L -m 8G -cpu host -smp 8 -vga virtio --full-screen
